@@ -25,18 +25,24 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+
+
+app.post("/urls", (req, res) => {
+  let randomShortURL = generateRandomString();
+  urlDatabase[randomShortURL] = req.body.longURL;
+  console.log(req.body); // Log the POST request body to the console
+  res.redirect(`/urls/${randomShortURL}`); 
+});
+
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect(`/urls`);
+})
+
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
-
-app.post("/urls", (req, res) => {
-  let shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
-  console.log(req.body); // Log the POST request body to the console
-  res.redirect(`/urls/${shortURL}`); 
-});
-
 
 
 app.get("/urls/new", (req, res) => {
