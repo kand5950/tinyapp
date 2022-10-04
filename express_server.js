@@ -34,17 +34,24 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${randomShortURL}`); 
 });
 
+//redirects edit buttom to urls/id
+app.post("/urls/:id/edit", (req, res) => {
+  res.redirect(`/urls/${req.params.id}`);
+})
+
+//deletes url from /urls
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect(`/urls`);
 })
 
+//shows urls
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
-
+//renders a new url html page
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
