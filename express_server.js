@@ -37,7 +37,7 @@ app.post("/urls", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id] = req.body.longURL
   console.log(req.body)
-  res.redirect(`/urls/${req.params.id}`);
+  res.redirect(`/urls`);
 
 })
 
