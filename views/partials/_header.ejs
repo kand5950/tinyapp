@@ -18,13 +18,21 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
+    <% if (!username) { %>
     <form class='form-inline my-1' action='/login' method='POST'>
       <div>
-        Welcome: <%= username %>
-        <input class="form-control mr-sm-2" type="text" name="username" placeholder="name='username'">
+        <input class="form-control mr-sm-2" type="text" name="username" placeholder="username">
         <button class="btn btn-light" type="submit">Login</button>
       </div>
-    </form>      
+    </form> 
+    <% } else { %>
+    <form class="form-inline my-1" action="/logout" method='POST'>
+      <div>
+        Welcome: <%= username %>
+        <button class="btn btn-light" type="submit">Logout</button>
+      </div>
+    </form>   
+    <% } %>   
         
       
   </nav>
