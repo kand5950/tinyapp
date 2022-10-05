@@ -41,11 +41,6 @@ app.post("/urls/:id", (req, res) => {
 
 })
 
-//redirects edit buttom to urls/id
-app.post("/urls/:id/edit", (req, res) => {
-  res.redirect(`/urls/${req.params.id}`);
-})
-
 //deletes url from /urls
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
