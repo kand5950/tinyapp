@@ -34,6 +34,13 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${randomShortURL}`); 
 });
 
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id] = req.body.longURL
+  console.log(req.body)
+  res.redirect(`/urls/${req.params.id}`);
+
+})
+
 //redirects edit buttom to urls/id
 app.post("/urls/:id/edit", (req, res) => {
   res.redirect(`/urls/${req.params.id}`);
@@ -58,9 +65,6 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
   let longURL = urlDatabase[req.params.id];
-  if (longURL !== `http://${longURL}`) {
-    longURL = `http://${longURL}`;
-  }
   res.redirect(longURL);
 })
 
