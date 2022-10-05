@@ -1,6 +1,9 @@
 const express = require("express");
 const app = express();
 const PORT = 8080;
+const cookieParser = require('cookie-parser')
+
+
 
 //generate random 6 char string
 function generateRandomString() {
@@ -16,8 +19,12 @@ function generateRandomString() {
 	
 }
 
+//unique name
+
+
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 
 const urlDatabase = {
@@ -40,6 +47,12 @@ app.post("/urls/:id", (req, res) => {
   res.redirect(`/urls`);
 
 })
+
+app.post("/login", (req, res) => {
+  res.cookie('username', req.body.username);
+  res.redirect(`/urls`);
+})
+
 
 //deletes url from /urls
 app.post("/urls/:id/delete", (req, res) => {
