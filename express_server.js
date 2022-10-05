@@ -62,13 +62,15 @@ app.post("/urls/:id/delete", (req, res) => {
 
 //shows urls
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { urls: urlDatabase, username: req.cookies['username']};
   res.render("urls_index", templateVars);
 });
 
 //renders a new url html page
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = { username: req.cookies['username'] };
+
+  res.render("urls_new", templateVars);
 });
 
 app.get("/u/:id", (req, res) => {
@@ -77,7 +79,7 @@ app.get("/u/:id", (req, res) => {
 })
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id]};
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], username: req.cookies['username']};
   res.render("urls_show", templateVars);
 });
 
