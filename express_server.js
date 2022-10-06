@@ -26,14 +26,15 @@ app.use(cookieParser());
 
 const users = {
   
-};
-
-const urlDatabase = {
   
 };
 
+const urlDatabase = {
+  //[shortURL] : { userId: req.cookies['user_id'],longUrl: req.body.longUrl }
+};
 
 
+// finding email of a user in a database
 const findUserEmailDatabase = (email, database) => {
   for (const user in database) {
     if (users[user].email === email) {
@@ -44,12 +45,25 @@ const findUserEmailDatabase = (email, database) => {
 
 };
 
-// const sessionID = function (req.cookies) {
+const urlsForUser = (id) => {
 
-// };
+  let userUrl = {};
+  //find which current user is on via req.cookies.user_id which will be id
+  //iterate through data base
+  for (const ids in urlDatabase) {
+    if (urlDatabase[ids].userId === id) {
+      userUrl[ids] = urlDatabase[ids]
+    }
+  } 
+  return userUrl;
+  //returns users object from database
 
-//GETS
+}
 
+
+
+//GET REGISTER
+//Register page, if a user is logged in user will not be able to access register page
 app.get("/register", (req, res) => {
   let currentCookie = req.cookies.user_id;
   const templateVars = { user: users[req.cookies.user_id]};
@@ -61,6 +75,8 @@ app.get("/register", (req, res) => {
   }
 });
 
+//GET LOGIN
+//login a user, if a user is logged in user will not be able to access log in page 
 app.get("/login", (req, res) => {
   let currentCookie = req.cookies.user_id;
   const templateVars = { user: users[req.cookies.user_id]};
@@ -73,12 +89,14 @@ app.get("/login", (req, res) => {
 });
 
 //shows urls
+//user: for ejs file 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, user: users[req.cookies['user_id']]};
+  const templateVars = { urls: urlsForUser(req.cookies['user_id']), user: users[req.cookies['user_id']]};
   res.render("urls_index", templateVars);
 });
 
 //renders a new url html page
+//Users not logged in will be directed to /login
 app.get("/urls/new", (req, res) => {
   let currentCookie = req.cookies.user_id;
   if (!currentCookie) {
@@ -90,6 +108,8 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
+//to access longurl website with shorturl in domain
+//if shortUrl doesnt exist returns error
 app.get("/u/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
     res.statusCode = 400;
@@ -100,7 +120,8 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longUrl);
 });
 
-// page for short and long versions
+//page for short and long versions and editing long url
+//if user puts short url in domain, returns error
 app.get("/urls/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
   res.statusCode = 400;
@@ -133,26 +154,26 @@ app.get("/hello", (req, res) => {
 });
 
 // POST
-
+//displays current users shorlUrl id and long Url
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   let currentCookie = req.cookies.user_id;
   if (!currentCookie) {
     res.send("Please login or Register to view URLs");
-  } else {
+    return;
+  }
     urlDatabase[shortURL] = {
       userId: req.cookies['user_id'],
       longUrl: req.body.longUrl
     }
-  console.log(req.body); // Log the POST request body to the console
   res.redirect(`/urls/${shortURL}`);
-  }
+    
 });
 
 app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id] = req.body.longURL;
-  console.log(req.body);
   res.redirect(`/urls`);
+  return;
 
 });
 
@@ -169,11 +190,10 @@ app.post("/register", (req, res) => {
       res.cookie("user_id", usersId);
       res.redirect('/urls');
       return;
-    } else {
+    } 
       res.statusCode = 400;
       res.send('<h3>ERROR 400</h3><br><h4>EMAIL ALREADY IN DATABASE</h4>');
       return;
-    }
   }
   res.statusCode = 400;
   res.send('<h3>ERROR 400</h3><p>PLEASE FILL EMAIL AND PASSWORD FIELDS</p>');
@@ -186,6 +206,7 @@ app.post("/login", (req, res) => {
     if (req.body.password === user.password) {
       res.cookie("user_id", user.usersId);
       res.redirect('/urls');
+      return;
     } else {
       res.statusCode = 403;
       res.send('<h3>ERROR 403</h3><br><h4>Incorrect Password.</h4>');
