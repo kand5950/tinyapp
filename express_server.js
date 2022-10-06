@@ -100,6 +100,13 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect(`/urls`);
 });
 
+// show login page
+app.get("/login", (req, res) => {
+  const templateVars = { user: users[req.cookies['user_id']]};
+  res.render("urls_register", templateVars);
+});
+
+// show register page
 app.get("/register", (req, res) => {
   const templateVars = { user: users[req.cookies['user_id']]};
   res.render("urls_register", templateVars);
