@@ -91,12 +91,22 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/u/:id", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    res.statusCode = 400;
+    res.send('<h3>ERROR 400</h3><p>TINY URL DOESNT EXIST</p>');
+    return;
+    }
   let longUrl = urlDatabase[req.params.id].longUrl;
   res.redirect(longUrl);
 });
 
 // page for short and long versions
 app.get("/urls/:id", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+  res.statusCode = 400;
+  res.send('<h3>ERROR 400</h3><p>TINY URL DOESNT EXIST</p>');
+  return;
+  }
   const templateVars = { id: req.params.id, longUrl: urlDatabase[req.params.id].longUrl, user: users[req.cookies['user_id']]};
   res.render("urls_show", templateVars);
 });
@@ -158,10 +168,11 @@ app.post("/register", (req, res) => {
       };
       res.cookie("user_id", usersId);
       res.redirect('/urls');
+      return;
     } else {
       res.statusCode = 400;
       res.send('<h3>ERROR 400</h3><br><h4>EMAIL ALREADY IN DATABASE</h4>');
-  
+      return;
     }
   }
   res.statusCode = 400;
