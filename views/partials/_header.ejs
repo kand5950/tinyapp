@@ -18,17 +18,16 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <% if (!username) { %>
-    <form class='form-inline my-1' action='/login' method='POST'>
+    <% if (!user) { %>
+    <form class='form-inline my-1' action='/register' method='POST'>
       <div>
-        <input class="form-control mr-sm-2" type="text" name="username" placeholder="username">
         <button class="btn btn-light" type="submit">Login</button>
       </div>
     </form> 
     <% } else { %>
     <form class="form-inline my-1" action="/logout" method='POST'>
       <div>
-        Welcome: <%= username %>
+        Welcome: <%= JSON.stringify(user["email"]) %>
         <button class="btn btn-light" type="submit">Logout</button>
       </div>
     </form>   
