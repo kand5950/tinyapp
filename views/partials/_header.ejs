@@ -19,11 +19,11 @@
       </div>
     </div>
     <% if (!user) { %>
-    <form class='form-inline my-1' action='/register' method='POST'>
-      <div>
-        <button class="btn btn-light" type="submit">Login</button>
+       <div>
+        <a class="btn btn-secondary" href="/login">Login</a>
+        <a class="btn btn-secondary" href="/register">Register</a>  
       </div>
-    </form> 
+   
     <% } else { %>
     <form class="form-inline my-1" action="/logout" method='POST'>
       <div>
