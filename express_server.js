@@ -45,72 +45,7 @@ const findUserEmailDatabase =  function(email, database) {
 
 };
 
-
-
-app.post("/urls", (req, res) => {
-  let randomShortURL = generateRandomString();
-  urlDatabase[randomShortURL] = req.body.longURL;
-  console.log(req.body); // Log the POST request body to the console
-  res.redirect(`/urls/${randomShortURL}`);
-});
-
-app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.longURL;
-  console.log(req.body);
-  res.redirect(`/urls`);
-
-});
-
-app.post("/register", (req, res) => {
-  if (req.body.email && req.body.password) {
-    if (!findUserEmailDatabase(req.body.email, users)) {
-      const usersId = generateRandomString();
-      users[usersId] = {
-        usersId,
-        email: req.body.email,
-        password: req.body.password
-
-      };
-      res.cookie("user_id", usersId);
-      res.redirect('/urls');
-    } else {
-      res.statusCode = 400;
-      res.send('<h3>ERROR 400</h3><br><h4>EMAIL ALREADY IN DATABASE</h4>');
-  
-    }
-  }
-  res.statusCode = 400;
-  res.send('<h3>ERROR 400</h3><p>PLEASE FILL EMAIL AND PASSWORD FIELDS</p>');
-});
-
-app.post("/login", (req, res) => {
-
-  let currentUser = findUserEmailDatabase(req.body.email, users);
-  if (currentUser) {
-    if (req.body.password === currentUser.password) {
-      res.cookie("user_id", currentUser.id);
-      res.redirect('/urls');
-    } else {
-      res.statusCode = 403;
-      res.send('<h3>ERROR 403</h3><br><h4>Incorrect Password.</h4>');
-    }
-  }
-
-  res.statusCode = 400;
-  res.send('<h3>ERROR 403</h3><p>Email is not registered.</p>');
-});
-
-app.post("/logout", (req, res) => {
-  res.clearCookie('username', req.body.username);
-  res.redirect(`/urls`);
-});
-
-
-//deletes url from /urls
-app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
-  res.redirect(`/urls`);
-});
+//GETS
 
 app.get("/register", (req, res) => {
   const templateVars = { user: users[req.cookies['user_id']]};
@@ -165,6 +100,73 @@ app.get("/urls.json", (req, res) => {
 
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
+});
+
+// POST
+
+app.post("/urls", (req, res) => {
+  let randomShortURL = generateRandomString();
+  urlDatabase[randomShortURL] = req.body.longURL;
+  console.log(req.body); // Log the POST request body to the console
+  res.redirect(`/urls/${randomShortURL}`);
+});
+
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id] = req.body.longURL;
+  console.log(req.body);
+  res.redirect(`/urls`);
+
+});
+
+app.post("/register", (req, res) => {
+  if (req.body.email && req.body.password) {
+    if (!findUserEmailDatabase(req.body.email, users)) {
+      const usersId = generateRandomString();
+      users[usersId] = {
+        usersId,
+        email: req.body.email,
+        password: req.body.password
+
+      };
+      res.cookie("user_id", usersId);
+      res.redirect('/urls');
+    } else {
+      res.statusCode = 400;
+      res.send('<h3>ERROR 400</h3><br><h4>EMAIL ALREADY IN DATABASE</h4>');
+  
+    }
+  }
+  res.statusCode = 400;
+  res.send('<h3>ERROR 400</h3><p>PLEASE FILL EMAIL AND PASSWORD FIELDS</p>');
+});
+
+app.post("/login", (req, res) => {
+
+  let user = findUserEmailDatabase(req.body.email, users);
+  if (user) {
+    if (req.body.password === user.password) {
+      res.cookie("user_id", user.usersId);
+      res.redirect('/urls');
+    } else {
+      res.statusCode = 403;
+      res.send('<h3>ERROR 403</h3><br><h4>Incorrect Password.</h4>');
+    }
+  }
+
+  res.statusCode = 400;
+  res.send('<h3>ERROR 403</h3><p>Email is not registered.</p>');
+});
+
+app.post("/logout", (req, res) => {
+  res.clearCookie('user_id');
+  res.redirect(`/urls`);
+});
+
+
+//deletes url from /urls
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect(`/urls`);
 });
 
 app.listen(PORT, () => {
