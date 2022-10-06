@@ -35,13 +35,13 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-const findEmailDatabase =  function(email) {
-  for (let user in users) {
+const findUserEmailDatabase =  function(email, database) {
+  for (const user in database) {
     if (users[user].email === email) {
-      return true;
+      return users[user];
     }
   }
-  return false;
+  return undefined;
 
 };
 
@@ -63,7 +63,7 @@ app.post("/urls/:id", (req, res) => {
 
 app.post("/register", (req, res) => {
   if (req.body.email && req.body.password) {
-    if (!findEmailDatabase(req.body.email)) {
+    if (!findUserEmailDatabase(req.body.email, users)) {
       const usersId = generateRandomString();
       users[usersId] = {
         usersId,
@@ -84,8 +84,20 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
-  res.redirect(`/urls`);
+
+  let currentUser = findUserEmailDatabase(req.body.email, users);
+  if (currentUser) {
+    if (req.body.password === currentUser.password) {
+      res.cookie("user_id", currentUser.id);
+      res.redirect('/urls');
+    } else {
+      res.statusCode = 403;
+      res.send('<h3>ERROR 403</h3><br><h4>Incorrect Password.</h4>');
+    }
+  }
+
+  res.statusCode = 400;
+  res.send('<h3>ERROR 403</h3><p>Email is not registered.</p>');
 });
 
 app.post("/logout", (req, res) => {
