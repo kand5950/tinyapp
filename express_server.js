@@ -75,7 +75,7 @@ app.post("/register", (req, res) => {
       res.redirect('/urls');
     } else {
       res.statusCode = 400;
-      res.send('<h3>ERROR 400</h3><h4>EMAIL ALREADY IN DATABASE</h4>');
+      res.send('<h3>ERROR 400</h3><br><h4>EMAIL ALREADY IN DATABASE</h4>');
   
     }
   }
@@ -100,16 +100,14 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect(`/urls`);
 });
 
-// show login page
-app.get("/login", (req, res) => {
+app.get("/register", (req, res) => {
   const templateVars = { user: users[req.cookies['user_id']]};
   res.render("urls_register", templateVars);
 });
 
-// show register page
-app.get("/register", (req, res) => {
+app.get("/login", (req, res) => {
   const templateVars = { user: users[req.cookies['user_id']]};
-  res.render("urls_register", templateVars);
+  res.render("urls_login", templateVars);
 });
 
 //shows urls
@@ -130,6 +128,7 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
+// page for short and long versions
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: users[req.cookies['user_id']]};
   res.render("urls_show", templateVars);
