@@ -19,7 +19,7 @@
       </div>
     </div>
     <% if (!user) { %>
-    <form class='form-inline my-1' action='/register' method='POST'>
+    <form class='form-inline my-1' action='/login' method='POST'>
       <div>
         <button class="btn btn-light" type="submit">Login</button>
       </div>
@@ -27,7 +27,7 @@
     <% } else { %>
     <form class="form-inline my-1" action="/logout" method='POST'>
       <div>
-        Welcome: <%= JSON.stringify(user["email"]) %>
+        Welcome: <%= user.email %>
         <button class="btn btn-light" type="submit">Logout</button>
       </div>
     </form>   

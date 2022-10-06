@@ -35,6 +35,16 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+function findEmailDatabase(email) {
+  for (let user in users) {
+    if (users[user].email === email) {
+      return true;
+    }
+  }
+  return false;
+
+}
+
 
 
 app.post("/urls", (req, res) => {
