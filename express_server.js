@@ -35,6 +35,8 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+
+
 const findUserEmailDatabase =  function(email, database) {
   for (const user in database) {
     if (users[user].email === email) {
@@ -45,16 +47,32 @@ const findUserEmailDatabase =  function(email, database) {
 
 };
 
+// const sessionID = function (req.cookies) {
+
+// };
+
 //GETS
 
 app.get("/register", (req, res) => {
-  const templateVars = { user: users[req.cookies['user_id']]};
+  let currentCookie = req.cookies.user_id
+  const templateVars = { user: users[req.cookies.user_id]};
+  if (currentCookie) {
+    res.redirect("/urls");
+  } else {
+  
   res.render("urls_register", templateVars);
+  }
 });
 
 app.get("/login", (req, res) => {
-  const templateVars = { user: users[req.cookies['user_id']]};
+  let currentCookie = req.cookies.user_id
+  const templateVars = { user: users[req.cookies.user_id]};
+  if (currentCookie) {
+    res.redirect("/urls");
+  } else {
+  
   res.render("urls_login", templateVars);
+  }
 });
 
 //shows urls
