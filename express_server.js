@@ -6,7 +6,7 @@ const cookieParser = require('cookie-parser');
 
 
 //generate random 6 char string
-function generateRandomString() {
+const generateRandomString = () => {
   const value = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789';
   let result = '';
 
@@ -17,9 +17,7 @@ function generateRandomString() {
 
   return result;
 	
-}
-
-//unique name
+};
 
 
 app.set('view engine', 'ejs');
@@ -37,7 +35,7 @@ const urlDatabase = {
 
 
 
-const findUserEmailDatabase =  function(email, database) {
+const findUserEmailDatabase = (email, database) => {
   for (const user in database) {
     if (users[user].email === email) {
       return users[user];
@@ -54,24 +52,24 @@ const findUserEmailDatabase =  function(email, database) {
 //GETS
 
 app.get("/register", (req, res) => {
-  let currentCookie = req.cookies.user_id
+  let currentCookie = req.cookies.user_id;
   const templateVars = { user: users[req.cookies.user_id]};
   if (currentCookie) {
     res.redirect("/urls");
   } else {
   
-  res.render("urls_register", templateVars);
+    res.render("urls_register", templateVars);
   }
 });
 
 app.get("/login", (req, res) => {
-  let currentCookie = req.cookies.user_id
+  let currentCookie = req.cookies.user_id;
   const templateVars = { user: users[req.cookies.user_id]};
   if (currentCookie) {
     res.redirect("/urls");
   } else {
   
-  res.render("urls_login", templateVars);
+    res.render("urls_login", templateVars);
   }
 });
 
@@ -83,9 +81,14 @@ app.get("/urls", (req, res) => {
 
 //renders a new url html page
 app.get("/urls/new", (req, res) => {
-  const templateVars = { user: users[req.cookies['user_id']] };
+  let currentCookie = req.cookies.user_id;
+  if (!currentCookie) {
+    res.redirect("/login");
+  } else {
+    const templateVars = { user: users[req.cookies['user_id']] };
 
-  res.render("urls_new", templateVars);
+    res.render("urls_new", templateVars);
+  }
 });
 
 app.get("/u/:id", (req, res) => {
@@ -124,9 +127,14 @@ app.get("/hello", (req, res) => {
 
 app.post("/urls", (req, res) => {
   let randomShortURL = generateRandomString();
+  let currentCookie = req.cookies.user_id;
+  if (!currentCookie) {
+    res.send("<html><body>Please <b>Login/Register</b></body></html>\n");
+  } else {
   urlDatabase[randomShortURL] = req.body.longURL;
   console.log(req.body); // Log the POST request body to the console
   res.redirect(`/urls/${randomShortURL}`);
+  }
 });
 
 app.post("/urls/:id", (req, res) => {
