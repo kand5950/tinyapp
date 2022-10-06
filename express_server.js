@@ -29,8 +29,7 @@ const users = {
 };
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  
 };
 
 
@@ -92,13 +91,13 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/u/:id", (req, res) => {
-  let longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  let longUrl = urlDatabase[req.params.id].longUrl;
+  res.redirect(longUrl);
 });
 
 // page for short and long versions
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: users[req.cookies['user_id']]};
+  const templateVars = { id: req.params.id, longUrl: urlDatabase[req.params.id].longUrl, user: users[req.cookies['user_id']]};
   res.render("urls_show", templateVars);
 });
 
@@ -126,10 +125,18 @@ app.get("/hello", (req, res) => {
 // POST
 
 app.post("/urls", (req, res) => {
-  let randomShortURL = generateRandomString();
-  urlDatabase[randomShortURL] = req.body.longURL;
+  let shortURL = generateRandomString();
+  let currentCookie = req.cookies.user_id;
+  if (!currentCookie) {
+    res.send("Please login or Register to view URLs");
+  } else {
+    urlDatabase[shortURL] = {
+      userId: req.cookies['user_id'],
+      longUrl: req.body.longUrl
+    }
   console.log(req.body); // Log the POST request body to the console
-  res.redirect(`/urls/${randomShortURL}`);
+  res.redirect(`/urls/${shortURL}`);
+  }
 });
 
 app.post("/urls/:id", (req, res) => {
