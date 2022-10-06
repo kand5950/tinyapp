@@ -52,13 +52,13 @@ const urlsForUser = (id) => {
   //iterate through data base
   for (const ids in urlDatabase) {
     if (urlDatabase[ids].userId === id) {
-      userUrl[ids] = urlDatabase[ids]
+      userUrl[ids] = urlDatabase[ids];
     }
-  } 
+  }
   return userUrl;
   //returns users object from database
 
-}
+};
 
 
 
@@ -76,7 +76,7 @@ app.get("/register", (req, res) => {
 });
 
 //GET LOGIN
-//login a user, if a user is logged in user will not be able to access log in page 
+//login a user, if a user is logged in user will not be able to access log in page
 app.get("/login", (req, res) => {
   let currentCookie = req.cookies.user_id;
   const templateVars = { user: users[req.cookies.user_id]};
@@ -89,7 +89,7 @@ app.get("/login", (req, res) => {
 });
 
 //shows urls
-//user: for ejs file 
+//user: for ejs file
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlsForUser(req.cookies['user_id']), user: users[req.cookies['user_id']]};
   res.render("urls_index", templateVars);
@@ -115,7 +115,7 @@ app.get("/u/:id", (req, res) => {
     res.statusCode = 400;
     res.send('<h3>ERROR 400</h3><p>TINY URL DOESNT EXIST</p>');
     return;
-    }
+  }
   let longUrl = urlDatabase[req.params.id].longUrl;
   res.redirect(longUrl);
 });
@@ -124,9 +124,19 @@ app.get("/u/:id", (req, res) => {
 //if user puts short url in domain, returns error
 app.get("/urls/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
-  res.statusCode = 400;
-  res.send('<h3>ERROR 400</h3><p>TINY URL DOESNT EXIST</p>');
-  return;
+    res.statusCode = 400;
+    res.send('<h3>ERROR 400</h3><p>TINY URL DOESNT EXIST / NOT OWNED BY USER</p>');
+    return;
+  }
+  const templateVars = { id: req.params.id, longUrl: urlDatabase[req.params.id].longUrl, user: users[req.cookies['user_id']]};
+  res.render("urls_show", templateVars);
+});
+
+app.get("/urls/:id/delete", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    res.statusCode = 400;
+    res.send('<h3>ERROR 400</h3><p>TINY URL DOESNT EXIST / NOT OWNED BY USER</p>');
+    return;
   }
   const templateVars = { id: req.params.id, longUrl: urlDatabase[req.params.id].longUrl, user: users[req.cookies['user_id']]};
   res.render("urls_show", templateVars);
@@ -162,18 +172,21 @@ app.post("/urls", (req, res) => {
     res.send("Please login or Register to view URLs");
     return;
   }
-    urlDatabase[shortURL] = {
-      userId: req.cookies['user_id'],
-      longUrl: req.body.longUrl
-    }
+  urlDatabase[shortURL] = {
+    userId: req.cookies['user_id'],
+    longUrl: req.body.longUrl
+  };
   res.redirect(`/urls/${shortURL}`);
     
 });
 
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.longURL;
+  if (req.cookies.user_id === urlDatabase[req.params.id].userId) {
+    urlDatabase[req.params.id] = req.body.longURL;
+  
+    return;
+  }
   res.redirect(`/urls`);
-  return;
 
 });
 
@@ -190,10 +203,10 @@ app.post("/register", (req, res) => {
       res.cookie("user_id", usersId);
       res.redirect('/urls');
       return;
-    } 
-      res.statusCode = 400;
-      res.send('<h3>ERROR 400</h3><br><h4>EMAIL ALREADY IN DATABASE</h4>');
-      return;
+    }
+    res.statusCode = 400;
+    res.send('<h3>ERROR 400</h3><br><h4>EMAIL ALREADY IN DATABASE</h4>');
+    return;
   }
   res.statusCode = 400;
   res.send('<h3>ERROR 400</h3><p>PLEASE FILL EMAIL AND PASSWORD FIELDS</p>');
@@ -225,7 +238,10 @@ app.post("/logout", (req, res) => {
 
 //deletes url from /urls
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
+  if (req.cookies.user_id === urlDatabase[req.params.id].userId) {
+    delete urlDatabase[req.params.id];
+
+  }
   res.redirect(`/urls`);
 });
 
