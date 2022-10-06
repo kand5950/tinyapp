@@ -127,14 +127,9 @@ app.get("/hello", (req, res) => {
 
 app.post("/urls", (req, res) => {
   let randomShortURL = generateRandomString();
-  let currentCookie = req.cookies.user_id;
-  if (!currentCookie) {
-    res.send("<html><body>Please <b>Login/Register</b></body></html>\n");
-  } else {
   urlDatabase[randomShortURL] = req.body.longURL;
   console.log(req.body); // Log the POST request body to the console
   res.redirect(`/urls/${randomShortURL}`);
-  }
 });
 
 app.post("/urls/:id", (req, res) => {
