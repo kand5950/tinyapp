@@ -1,4 +1,5 @@
 const express = require("express");
+const  { getUserByEmail } = require("./helpers");
 const app = express();
 const PORT = 8080;
 const cookieSession = require('cookie-session')
@@ -35,18 +36,6 @@ const users = {
 
 const urlDatabase = {
   //[shortURL] : { userId: req.cookies['user_id'],longUrl: req.body.longUrl }
-};
-
-
-// finding email of a user in a database
-const findUserEmailDatabase = (email, database) => {
-  for (const user in database) {
-    if (users[user].email === email) {
-      return users[user];
-    }
-  }
-  return undefined;
-
 };
 
 const urlsForUser = (id) => {
@@ -195,8 +184,9 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
+  if(!/\s/.test(req.body.password) ) {
   if (req.body.email && req.body.password) {
-    if (!findUserEmailDatabase(req.body.email, users)) {
+    if (!getUserByEmail(req.body.email, users)) {
       const usersId = generateRandomString();
       users[usersId] = {
         usersId,
@@ -214,19 +204,24 @@ app.post("/register", (req, res) => {
   }
   res.statusCode = 400;
   res.send('<h3>ERROR 400</h3><p>PLEASE FILL EMAIL AND PASSWORD FIELDS</p>');
+  return;
+}
+res.statusCode = 400;
+  res.send('<h3>ERROR 400</h3><p>NO SPACES ALOUD IN PASSWORD!</p>');
+
 });
 
 app.post("/login", (req, res) => {
-  let user = findUserEmailDatabase(req.body.email, users);
+  const user = getUserByEmail(req.body.email, users);
   if (user) {
     if (bcrypt.compareSync(req.body.password, user.password)) {
-      req.session = user_id , user.usersId;
+      req.session.user_id = user.usersId;
       res.redirect('/urls');
       return;
     } 
       res.statusCode = 403;
       res.send('<h3>ERROR 403</h3><br><h4>Incorrect Password.</h4>');
-  
+      return;
   }
 
   res.statusCode = 400;
