@@ -1,26 +1,9 @@
 const express = require("express");
-const  { getUserByEmail } = require("./helpers");
+const  { getUserByEmail, generateRandomString, urlsForUser } = require("./helpers");
 const app = express();
 const PORT = 8080;
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
-
-
-
-//generate random 6 char string
-const generateRandomString = () => {
-  const value = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789';
-  let result = '';
-
-  for (let i = 0; i < 6; i++) {
-
-    result += value.charAt(Math.floor(Math.random() * value.length));
-  }
-
-  return result;
-	
-};
-
 
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
@@ -29,41 +12,19 @@ app.use(cookieSession({
   secret: 'hi-my-name-is-slim-shady',
 }));
 
-const users = {
-  
-  
-};
-
-const urlDatabase = {
-  //[shortURL] : { userId: req.cookies['user_id'],longUrl: req.body.longUrl }
-};
-
-const urlsForUser = (id) => {
-
-  let userUrl = {};
-  //find which current user is on via req.cookies.user_id which will be id
-  //iterate through data base
-  for (const ids in urlDatabase) {
-    if (urlDatabase[ids].userId === id) {
-      userUrl[ids] = urlDatabase[ids];
-    }
-  }
-  return userUrl;
-  //returns users object from database
-
-};
-
-
+const users = {};
+const urlDatabase = {};
 
 //GET REGISTER
 //Register page, if a user is logged in user will not be able to access register page
 app.get("/register", (req, res) => {
   let currentCookie = req.session.user_id;
-  const templateVars = { user: users[req.session.user_id]};
+  
   if (currentCookie) {
     res.redirect("/urls");
+    return;
   } else {
-  
+    const templateVars = { user: users[req.session.user_id]};
     res.render("urls_register", templateVars);
   }
 });
@@ -76,7 +37,7 @@ app.get("/login", (req, res) => {
   if (currentCookie) {
     res.redirect("/urls");
   } else {
-  
+    const templateVars = { user: users[req.session.user_id]};
     res.render("urls_login", templateVars);
   }
 });
@@ -84,7 +45,7 @@ app.get("/login", (req, res) => {
 //shows urls
 //user: for ejs file
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlsForUser(req.session['user_id']), user: users[req.session.user_id]};
+  const templateVars = { urls: urlsForUser(req.session.user_id, urlDatabase), user: users[req.session.user_id]};
   res.render("urls_index", templateVars);
 });
 
@@ -95,7 +56,7 @@ app.get("/urls/new", (req, res) => {
   if (!currentCookie) {
     res.redirect("/login");
   } else {
-    const templateVars = { user: users[req.session['user_id']] };
+    const templateVars = { user: users[req.session.user_id] };
 
     res.render("urls_new", templateVars);
   }
@@ -118,10 +79,14 @@ app.get("/u/:id", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
     res.statusCode = 400;
-    res.send('<h3>ERROR 400</h3><p>TINY URL DOESNT EXIST / NOT OWNED BY USER</p>');
+    res.send('<h3>ERROR 400</h3><p>TINY URL DOESNT EXIST</p>');
     return;
   }
-  const templateVars = { id: req.params.id, longUrl: urlDatabase[req.params.id].longUrl, user: users[req.session['user_id']]};
+  if (!urlsForUser[req.params.id] || !req.session.user_id) {
+    res.send('<h3>ERROR 400</h3><p>UNAUTHORIZED, NOT OWNER</p>');
+    return;
+  }
+  const templateVars = { id: req.params.id, longUrl: urlDatabase[req.params.id].longUrl, user: users[req.session.user_id]};
   res.render("urls_show", templateVars);
 });
 
@@ -131,29 +96,17 @@ app.get("/urls/:id/delete", (req, res) => {
     res.send('<h3>ERROR 400</h3><p>TINY URL DOESNT EXIST / NOT OWNED BY USER</p>');
     return;
   }
-  const templateVars = { id: req.params.id, longUrl: urlDatabase[req.params.id].longUrl, user: users[req.session['user_id']]};
+  const templateVars = { id: req.params.id, longUrl: urlDatabase[req.params.id].longUrl, user: users[req.session.user_id]};
   res.render("urls_show", templateVars);
 });
 
-app.get("/set", (req, res) => {
-  const a = 1; //test to see if accessoble for /fetch *no it's not accessible anywhere other than in function
-  res.send(`a = ${a}`);
-});
- 
-app.get("/fetch", (req, res) => {
-  res.send(`a = ${a}`);
-});
-
+//home tag goes to urls, if not logged in redirects to login
 app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+  if (req.session.user_id) {
+    res.redirect("/urls");
+    return;
+  }
+  res.redirect("/login");
 });
 
 // POST
@@ -166,7 +119,7 @@ app.post("/urls", (req, res) => {
     return;
   }
   urlDatabase[shortURL] = {
-    userId: req.session['user_id'],
+    userId: req.session.user_id,
     longUrl: req.body.longUrl
   };
   res.redirect(`/urls/${shortURL}`);
@@ -174,39 +127,39 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  if (req.session.user_id === urlDatabase[req.params.id].userId) {
-    urlDatabase[req.params.id] = req.body.longURL;
-  
+  if (req.session.user_id && (req.session.user_id === urlDatabase[req.params.id].userId)) {
+    urlDatabase[req.params.id].longUrl = req.body.longURL;
+    res.redirect(`/urls`);
     return;
   }
-  res.redirect(`/urls`);
+  res.send('<h3>ERROR 400</h3><p>UNAUTHORIZED, NOT OWNER</p>');
 
 });
 
 app.post("/register", (req, res) => {
-  if(!/\s/.test(req.body.password) ) {
-  if (req.body.email && req.body.password) {
-    if (!getUserByEmail(req.body.email, users)) {
-      const usersId = generateRandomString();
-      users[usersId] = {
-        usersId,
-        email: req.body.email,
-        password: bcrypt.hashSync(req.body.password, 10)
+  if (!/\s/.test(req.body.password)) {
+    if (req.body.email && req.body.password) {
+      if (!getUserByEmail(req.body.email, users)) {
+        const usersId = generateRandomString();
+        users[usersId] = {
+          usersId,
+          email: req.body.email,
+          password: bcrypt.hashSync(req.body.password, 10)
 
-      };
-      req.session.user_id = usersId;
-      res.redirect('/urls');
+        };
+        req.session.user_id = usersId;
+        res.redirect('/urls');
+        return;
+      }
+      res.statusCode = 400;
+      res.send('<h3>ERROR 400</h3><br><h4>EMAIL ALREADY IN DATABASE</h4>');
       return;
     }
     res.statusCode = 400;
-    res.send('<h3>ERROR 400</h3><br><h4>EMAIL ALREADY IN DATABASE</h4>');
+    res.send('<h3>ERROR 400</h3><p>PLEASE FILL EMAIL AND PASSWORD FIELDS</p>');
     return;
   }
   res.statusCode = 400;
-  res.send('<h3>ERROR 400</h3><p>PLEASE FILL EMAIL AND PASSWORD FIELDS</p>');
-  return;
-}
-res.statusCode = 400;
   res.send('<h3>ERROR 400</h3><p>NO SPACES ALOUD IN PASSWORD!</p>');
 
 });
@@ -218,10 +171,10 @@ app.post("/login", (req, res) => {
       req.session.user_id = user.usersId;
       res.redirect('/urls');
       return;
-    } 
-      res.statusCode = 403;
-      res.send('<h3>ERROR 403</h3><br><h4>Incorrect Password.</h4>');
-      return;
+    }
+    res.statusCode = 403;
+    res.send('<h3>ERROR 403</h3><br><h4>Incorrect Password.</h4>');
+    return;
   }
 
   res.statusCode = 400;
@@ -237,11 +190,11 @@ app.post("/logout", (req, res) => {
 
 //deletes url from /urls
 app.post("/urls/:id/delete", (req, res) => {
-  if (req.session.user_id === urlDatabase[req.params.id].userId) {
+  if (req.session.user_id && (req.session.user_id === urlDatabase[req.params.id].userId)) {
     delete urlDatabase[req.params.id];
-
+    res.redirect(`/urls`);
   }
-  res.redirect(`/urls`);
+  res.send('<h3>ERROR 400</h3><p>UNAUTHORIZED, NOT OWNER</p>');
 });
 
 app.listen(PORT, () => {
