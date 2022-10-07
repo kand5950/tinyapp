@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 const cookieParser = require('cookie-parser');
+const bcrypt = require("bcryptjs");
 
 
 
@@ -197,7 +198,7 @@ app.post("/register", (req, res) => {
       users[usersId] = {
         usersId,
         email: req.body.email,
-        password: req.body.password
+        password: bcrypt.hashSync(req.body.password, 10)
 
       };
       res.cookie("user_id", usersId);
@@ -213,17 +214,16 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-
   let user = findUserEmailDatabase(req.body.email, users);
   if (user) {
-    if (req.body.password === user.password) {
+    if (bcrypt.compareSync(req.body.password, user.password)) {
       res.cookie("user_id", user.usersId);
       res.redirect('/urls');
       return;
-    } else {
+    } 
       res.statusCode = 403;
       res.send('<h3>ERROR 403</h3><br><h4>Incorrect Password.</h4>');
-    }
+  
   }
 
   res.statusCode = 400;
