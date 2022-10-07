@@ -46,6 +46,7 @@ app.get("/login", (req, res) => {
 //user: for ejs file
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlsForUser(req.session.user_id, urlDatabase), user: users[req.session.user_id]};
+  let currentCookie = req.session.user_id;
   res.render("urls_index", templateVars);
 });
 
@@ -66,8 +67,8 @@ app.get("/urls/new", (req, res) => {
 //if shortUrl doesnt exist returns error
 app.get("/u/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
-    res.statusCode = 400;
-    res.send('<h3>ERROR 400</h3><p>TINY URL DOESNT EXIST</p>');
+    res.statusCode = 404;
+    res.send('<h3>ERROR 404</h3><p>TINY URL DOESNT EXIST</p>');
     return;
   }
   let longUrl = urlDatabase[req.params.id].longUrl;
@@ -78,12 +79,8 @@ app.get("/u/:id", (req, res) => {
 //if user puts short url in domain, returns error
 app.get("/urls/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
-    res.statusCode = 400;
-    res.send('<h3>ERROR 400</h3><p>TINY URL DOESNT EXIST</p>');
-    return;
-  }
-  if (!urlsForUser[req.params.id] || !req.session.user_id) {
-    res.send('<h3>ERROR 400</h3><p>UNAUTHORIZED, NOT OWNER</p>');
+    res.statusCode = 404;
+    res.send('<h3>ERROR 404</h3><p>TINY URL DOESNT EXIST</p>');
     return;
   }
   const templateVars = { id: req.params.id, longUrl: urlDatabase[req.params.id].longUrl, user: users[req.session.user_id]};
@@ -132,7 +129,8 @@ app.post("/urls/:id", (req, res) => {
     res.redirect(`/urls`);
     return;
   }
-  res.send('<h3>ERROR 400</h3><p>UNAUTHORIZED, NOT OWNER</p>');
+  res.statusCode = 401;
+  res.send('<h3>ERROR 401</h3><p>UNAUTHORIZED, NOT OWNER</p>');
 
 });
 
@@ -172,13 +170,13 @@ app.post("/login", (req, res) => {
       res.redirect('/urls');
       return;
     }
-    res.statusCode = 403;
-    res.send('<h3>ERROR 403</h3><br><h4>Incorrect Password.</h4>');
+    res.statusCode = 401;
+    res.send('<h3>ERROR 401</h3><br><h4>Incorrect Password.</h4>');
     return;
   }
 
-  res.statusCode = 400;
-  res.send('<h3>ERROR 403</h3><p>Email is not registered.</p>');
+  res.statusCode = 401;
+  res.send('<h3>ERROR 401</h3><p>Email is not registered.</p>');
 });
 
 app.post("/logout", (req, res) => {
@@ -194,7 +192,8 @@ app.post("/urls/:id/delete", (req, res) => {
     delete urlDatabase[req.params.id];
     res.redirect(`/urls`);
   }
-  res.send('<h3>ERROR 400</h3><p>UNAUTHORIZED, NOT OWNER</p>');
+  res.statusCode = 401;
+  res.send('<h3>ERROR 401</h3><p>UNAUTHORIZED, NOT OWNER</p>');
 });
 
 app.listen(PORT, () => {
