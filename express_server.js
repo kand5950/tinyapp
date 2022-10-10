@@ -18,9 +18,9 @@ const urlDatabase = {};
 //GET REGISTER
 //Register page, if a user is logged in user will not be able to access register page
 app.get("/register", (req, res) => {
-  let currentCookie = req.session.user_id;
+  let userId = req.session.user_id;
   
-  if (currentCookie) {
+  if (userId) {
     res.redirect("/urls");
     return;
   } else {
@@ -32,9 +32,9 @@ app.get("/register", (req, res) => {
 //GET LOGIN
 //login a user, if a user is logged in user will not be able to access log in page
 app.get("/login", (req, res) => {
-  let currentCookie = req.session.user_id;
+  let userId = req.session.user_id;
   const templateVars = { user: users[req.session.user_id]};
-  if (currentCookie) {
+  if (userId) {
     res.redirect("/urls");
   } else {
     const templateVars = { user: users[req.session.user_id]};
@@ -46,15 +46,15 @@ app.get("/login", (req, res) => {
 //user: for ejs file
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlsForUser(req.session.user_id, urlDatabase), user: users[req.session.user_id]};
-  let currentCookie = req.session.user_id;
+  let userId = req.session.user_id;
   res.render("urls_index", templateVars);
 });
 
 //renders a new url html page
 //Users not logged in will be directed to /login
 app.get("/urls/new", (req, res) => {
-  let currentCookie = req.session.user_id;
-  if (!currentCookie) {
+  let userId = req.session.user_id;
+  if (!userId) {
     res.redirect("/login");
   } else {
     const templateVars = { user: users[req.session.user_id] };
@@ -110,8 +110,8 @@ app.get("/", (req, res) => {
 //displays current users shorlUrl id and long Url
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
-  let currentCookie = req.session.user_id;
-  if (!currentCookie) {
+  let userId = req.session.user_id;
+  if (!userId) {
     res.send("Please login or Register to view URLs");
     return;
   }
