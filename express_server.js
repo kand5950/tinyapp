@@ -172,19 +172,15 @@ app.post("/register", (req, res) => {
 //POST /LOGIN
 app.post("/login", (req, res) => {
   const user = getUserByEmail(req.body.email, users);
-  if (user) {
-    if (bcrypt.compareSync(req.body.password, user.password)) {
+  if (bcrypt.compareSync(req.body.password, user.password) && user ) {
       req.session.user_id = user.usersId;
       res.redirect('/urls');
       return;
-    }
+    } 
     res.statusCode = 401;
-    res.send('<h3>ERROR 401</h3><br><h4>Incorrect Password.</h4>');
+    res.send("<h3>ERROR 401</h3><br><h4>Incorrect username or password. Please enter correctly or register.</h4>");
     return;
-  }
-
-  res.statusCode = 401;
-  res.send('<h3>ERROR 401</h3><p>Email is not registered.</p>');
+  
 });
 
 app.post("/logout", (req, res) => {
