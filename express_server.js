@@ -33,7 +33,6 @@ app.get("/register", (req, res) => {
 //login a user, if a user is logged in user will not be able to access log in page
 app.get("/login", (req, res) => {
   let userId = req.session.user_id;
-  const templateVars = { user: users[req.session.user_id]};
   if (userId) {
     res.redirect("/urls");
   } else {
