@@ -15,7 +15,64 @@ app.use(cookieSession({
 const users = {};
 const urlDatabase = {};
 
-//GET REGISTER
+// *********\/**********GET***********\/***********
+
+//GET /
+//home tag goes to urls, if not logged in redirects to login
+app.get("/", (req, res) => {
+  if (req.session.user_id) {
+    res.redirect("/urls");
+    return;
+  }
+  res.redirect("/login");
+});
+
+//GET URLS/ => shows urls
+//user: for ejs file
+app.get("/urls", (req, res) => {
+  const templateVars = { urls: urlsForUser(req.session.user_id, urlDatabase), user: users[req.session.user_id]};
+  let userId = req.session.user_id;
+  res.render("urls_index", templateVars);
+});
+
+//GET /URLS/NEW => renders a new url html page
+//Users not logged in will be directed to /login
+app.get("/urls/new", (req, res) => {
+  let userId = req.session.user_id;
+  if (!userId) {
+    res.redirect("/login");
+  } else {
+    const templateVars = { user: users[req.session.user_id] };
+
+    res.render("urls_new", templateVars);
+  }
+});
+
+//GET /URLS/:ID => page for short and long versions and editing long url
+//if user puts short url in domain, returns error
+app.get("/urls/:id", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    res.statusCode = 404;
+    res.send('<h3>ERROR 404</h3><p>TINY URL DOESNT EXIST</p>');
+    return;
+  }
+  const templateVars = { id: req.params.id, longUrl: urlDatabase[req.params.id].longUrl, user: users[req.session.user_id]};
+  res.render("urls_show", templateVars);
+});
+
+//GET /U/:ID => to access longurl website with shorturl in domain
+//if shortUrl doesnt exist returns error
+app.get("/u/:id", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    res.statusCode = 404;
+    res.send('<h3>ERROR 404</h3><p>TINY URL DOESNT EXIST</p>');
+    return;
+  }
+  let longUrl = urlDatabase[req.params.id].longUrl;
+  res.redirect(longUrl);
+});
+
+//GET /REGISTER
 //Register page, if a user is logged in user will not be able to access register page
 app.get("/register", (req, res) => {
   let userId = req.session.user_id;
@@ -29,7 +86,7 @@ app.get("/register", (req, res) => {
   }
 });
 
-//GET LOGIN
+//GET /LOGIN
 //login a user, if a user is logged in user will not be able to access log in page
 app.get("/login", (req, res) => {
   let userId = req.session.user_id;
@@ -41,51 +98,7 @@ app.get("/login", (req, res) => {
   }
 });
 
-//shows urls
-//user: for ejs file
-app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlsForUser(req.session.user_id, urlDatabase), user: users[req.session.user_id]};
-  let userId = req.session.user_id;
-  res.render("urls_index", templateVars);
-});
-
-//renders a new url html page
-//Users not logged in will be directed to /login
-app.get("/urls/new", (req, res) => {
-  let userId = req.session.user_id;
-  if (!userId) {
-    res.redirect("/login");
-  } else {
-    const templateVars = { user: users[req.session.user_id] };
-
-    res.render("urls_new", templateVars);
-  }
-});
-
-//to access longurl website with shorturl in domain
-//if shortUrl doesnt exist returns error
-app.get("/u/:id", (req, res) => {
-  if (!urlDatabase[req.params.id]) {
-    res.statusCode = 404;
-    res.send('<h3>ERROR 404</h3><p>TINY URL DOESNT EXIST</p>');
-    return;
-  }
-  let longUrl = urlDatabase[req.params.id].longUrl;
-  res.redirect(longUrl);
-});
-
-//page for short and long versions and editing long url
-//if user puts short url in domain, returns error
-app.get("/urls/:id", (req, res) => {
-  if (!urlDatabase[req.params.id]) {
-    res.statusCode = 404;
-    res.send('<h3>ERROR 404</h3><p>TINY URL DOESNT EXIST</p>');
-    return;
-  }
-  const templateVars = { id: req.params.id, longUrl: urlDatabase[req.params.id].longUrl, user: users[req.session.user_id]};
-  res.render("urls_show", templateVars);
-});
-
+//GET /URLS/:ID/DELETE => Acess to delete page
 app.get("/urls/:id/delete", (req, res) => {
   if (!urlDatabase[req.params.id]) {
     res.statusCode = 400;
@@ -96,16 +109,9 @@ app.get("/urls/:id/delete", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-//home tag goes to urls, if not logged in redirects to login
-app.get("/", (req, res) => {
-  if (req.session.user_id) {
-    res.redirect("/urls");
-    return;
-  }
-  res.redirect("/login");
-});
+// *********\/**********POST***********\/***********
 
-// POST
+// POST/URLS 
 //displays current users shorlUrl id and long Url
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
@@ -122,6 +128,7 @@ app.post("/urls", (req, res) => {
     
 });
 
+//POST /URLS/:ID
 app.post("/urls/:id", (req, res) => {
   if (req.session.user_id && (req.session.user_id === urlDatabase[req.params.id].userId)) {
     urlDatabase[req.params.id].longUrl = req.body.longURL;
@@ -133,6 +140,7 @@ app.post("/urls/:id", (req, res) => {
 
 });
 
+//POST /REGISTER
 app.post("/register", (req, res) => {
   if (!/\s/.test(req.body.password)) {
     if (req.body.email && req.body.password) {
@@ -161,6 +169,7 @@ app.post("/register", (req, res) => {
 
 });
 
+//POST /LOGIN
 app.post("/login", (req, res) => {
   const user = getUserByEmail(req.body.email, users);
   if (user) {
@@ -184,7 +193,7 @@ app.post("/logout", (req, res) => {
   res.redirect(`/urls`);
 });
 
-
+//POST /URLS/:ID/DELETE
 //deletes url from /urls
 app.post("/urls/:id/delete", (req, res) => {
   if (req.session.user_id && (req.session.user_id === urlDatabase[req.params.id].userId)) {
@@ -194,6 +203,8 @@ app.post("/urls/:id/delete", (req, res) => {
   res.statusCode = 401;
   res.send('<h3>ERROR 401</h3><p>UNAUTHORIZED, NOT OWNER</p>');
 });
+
+// *********\/**********LISTEN***********\/***********
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
