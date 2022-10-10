@@ -55,6 +55,10 @@ app.get("/urls/:id", (req, res) => {
     res.statusCode = 404;
     res.send('<h3>ERROR 404</h3><p>TINY URL DOESNT EXIST</p>');
     return;
+  } else if (!req.session.user_id || !(urlsForUser(req.session.user_id, urlDatabase))[req.params.id]) {
+    res.statusCode = 401;
+    res.send('<h3>ERROR 401</h3><p>UNAUTHORIZED, NOT OWNER</p>');
+    return;
   }
   const templateVars = { id: req.params.id, longUrl: urlDatabase[req.params.id].longUrl, user: users[req.session.user_id]};
   res.render("urls_show", templateVars);
@@ -96,17 +100,6 @@ app.get("/login", (req, res) => {
     const templateVars = { user: users[req.session.user_id]};
     res.render("urls_login", templateVars);
   }
-});
-
-//GET /URLS/:ID/DELETE => Acess to delete page
-app.get("/urls/:id/delete", (req, res) => {
-  if (!urlDatabase[req.params.id]) {
-    res.statusCode = 400;
-    res.send('<h3>ERROR 400</h3><p>TINY URL DOESNT EXIST / NOT OWNED BY USER</p>');
-    return;
-  }
-  const templateVars = { id: req.params.id, longUrl: urlDatabase[req.params.id].longUrl, user: users[req.session.user_id]};
-  res.render("urls_show", templateVars);
 });
 
 // *********\/**********POST***********\/***********
